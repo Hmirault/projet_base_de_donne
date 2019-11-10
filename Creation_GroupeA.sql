@@ -101,7 +101,7 @@ CREATE TABLE LOGERROR  (
 	
 
 /*
-definitionde triggers
+definition de triggers
 */
 
 
@@ -109,15 +109,26 @@ DROP TRIGGER IF EXISTS domaine
 DELIMITER $$
 CREATE TRIGGER domaine
 BEFORE INSERT on personne
-FOR EACH ROW BEGIN 
+FOR EACH ROW BEGIN
 IF NEW.domaine<>"visiteur" AND NEW.domaine<>"administrateur" AND NEW.domaine<>"contributeur" THEN
     INSERT INTO LOGERROR(MESSAGE) VALUES (CONCAT("ATTENTION, LE DOMAINE DOIT EXISTER"));
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'LE DOMAINE DOIT EXISTER';
 END IF; 
 END $$
-
 DELIMITER ;
 
+
+DROP TRIGGER IF EXISTS noter
+DELIMITER $$
+CREATE TRIGGER note
+BEFORE INSERT ON note
+FOR EACH ROW BEGIN
+IF (select date_e from evennement e where (new.id_e=e.id_e)) >= (select now()) THEN
+    INSERT INTO LOGERROR(MESSAGE) VALUES (CONCAT("ATTENTION, L EVENNEMENT N EST PAS FINI"));
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'EVENNEMENT PAS FINI';
+END IF; 
+END $$
+DELIMITER ;
 
 /*
 insertion de données dans les tables
@@ -128,16 +139,17 @@ insert into personne(pseudo, pass_word,domaine) values ("john_34", "1234","visit
 insert into personne(pseudo, pass_word,domaine) values ("charlotte", "9872541", "contributeur");
 insert into personne(pseudo, pass_word,domaine) values ("lulu", "lucillenbk", "administrateur");
 
+insert into theme values ("noel", 4);
+insert into theme values ("halloween", 4);
 
 
-insert into theme values ("noel", 2);
-
-insert into evennement(localisation, date_e,descriptif, max, nbr_participant, id_c, nom_t) values("Nimes", 2019-12-24, "fete de noel", 100, 0, 1,"noel");
+insert into evennement(localisation, date_e,descriptif, max, nbr_participant, id_c, nom_t) values("Nimes", '2019-12-24', "fete de noel", 100, 0, 3,"noel");
+insert into evennement(localisation, date_e,descriptif,max,nbr_participant,id_c,nom_t) values ("Montpellier", '2019-10-2', "fin de halloween", 1000, 0, 3,"alloween");
 
 insert into inscrit values(1,1);
 
+insert into note values (2,2, 12);
 
-select * from personne;
 
 
 
